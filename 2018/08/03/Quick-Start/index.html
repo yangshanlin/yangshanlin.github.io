@@ -6,48 +6,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="generator" content="130&#39;s Blog">
-    <title>Quick Start - 130&#39;s Blog</title>
+    <title>第一弹 - 130&#39;s Blog</title>
     <meta name="author" content="130">
     
     
-        <link rel="icon" href="/assets/images/favicon.ico">
+    <link rel="icon" href="/assets/images/favicon.ico">
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":130,"sameAs":["https://github.com/yangshanlin","https://twitter.com/yangshanlin","https://facebook.com/yangshanlinlin","mailto:yangshanlinlin@gmail.com"],"image":"ic_head.jpg"},"articleBody":"写在前面本来很早就打算打整一下Github Pages，一来没有发现自己中意的主题，二来也怪自己太懒，所以计划一直搁浅。其实，这次算是二次折腾，以前折腾过一次，但是不是很满意，这几天突然发现了自己满意的主题，于是便推翻重来！好了，话不多说，开整~。\nHexo本次框架采用的是Hexo，一开始的时候用过jekyll，但最终采用了Hexo，Hexo官方说：快速、简洁且高效的博客框架，果断入坑。本文也不打算从安装说起，快速入门可参考官方文档，传送门。\n主题嗯~，感觉说到正事上来了，本次主要折腾的是主题。找过一段时间的主题，但是也没发现自己满意的主题（感觉自己的时间都浪费在了找主题上面- . -），最后还是找了几款不错的主题，可参考文末链接。本文主要采用的主题是Tranquilpeak，最开始采用的是Themia，而Themia最开始也是基于Tranquilpeak进行的二次开发，但我最近发现原作者对Tranquilpeak进行了修改，于是使用了Tranquilpeak并在上面进行了修改，而修改的样式参照了https://blog.codeest.moe/。另外本文所采用的主题版本为v3.0.0，如果采用不同的版本可能会出现不同的问题，建议采用和本文同步的版本。\n一些坑在主题的配置过程中也遇到了一些坑：\n\n本地的favicon无法显示。\ncoverImage和thumbnailImage无法显示。\n一些icon无法显示。\n修改主题的坑。\n\n本地的favicon无法显示hexo根目录下的_config.yml文件中的url属性会影响favicon的加载：http://127.0.0.1:4000/assets/images/favicon.ico其中的http://127.0.0.1:4000就是在根目录下的_config.ymlurl属性，此时如果将其改为https://yanghsanlin.com最终生成的url为https://yanghsanlin.com/assets/images/favicon.ico从而显示不出favicon。\n解决方法一修改themes/tranquilpeak/layout/_partial/head.ejs\n12345678910111213141516171819202122&lt;%\t//...\t\t//定义favicon变量\tvar favicon = null;    // 如果是远程链接则直接返回    if (is_remote_url(theme.favicon)) &#123;        favicon = theme.favicon;    &#125; else &#123;    \t//是本地的相对地址则使用相对地址生成图片地址        favicon = url_for(theme.image_dir + &apos;/&apos; + theme.favicon);    &#125;%&gt;&lt;head&gt; &lt;% if (theme.favicon) &#123; %&gt; &lt;!--在此处使用 favicon变量--&gt;        &lt;link rel=&quot;icon&quot; href=&quot;&lt;%= favicon %&gt;&quot;&gt;    &lt;% &#125; %&gt;&lt;/head&gt;\n解决方法二新建relative_url.js，其对应的地址如下。themes/tranquilpeak/scripts/helpers/relative_url.js\n12345678910111213141516'use strict';/** * Resolve asset relativeurl * @param url * @param from * @returns &#123;String&#125; */hexo.extend.helper.register('relative_url', function (from, url) &#123;    // check if url is remote    if (this.is_remote_url(url)) &#123;        return url;    &#125;    // generate an URL from the one given    return this.url_for(from + \"/\" + url);&#125;);\n修改themes/tranquilpeak/layout/_partial/head.ejs\n1234567&lt;head&gt; &lt;% if (theme.favicon) &#123; %&gt; \t\t&lt;!--在此处使用 favicon变量--&gt;        link rel=&quot;icon&quot; href=&quot;&lt;%= relative_url(theme.image_dir, theme.favicon) %&gt;&quot;&gt;    &lt;% &#125; %&gt;&lt;/head&gt;\nhexo的某些主题样式修改需要进行编译过后才能生效，比如hexo，此时的资源文件需要新放入sources/_images/目录下，然后在主题目录下运行npm run prod会将文件拷贝到sources/assets/images/。\ncoverImage和thumbnailImage无法显示这个其实和上面的favicon显示问题一样。也只是对路径引用进行了修改。具体可参考源码。\n一些icon无法显示这个其实不算很坑，原作者已经在其升级日这里面进行了说明。而我们只需要到Font Awesome v5 - icons用最新的icon替换即可。但是注意themes/tranquilpeak/layout/_partial/post/actions.ejs文件中对icon的遍历时添加了统一前缀fa，导致配置的icon无法显示。\n123456789&lt;% for(var option in theme.sharing_options)  &#123;%&gt;            &lt;% var icon = theme.sharing_options[option].icon %&gt;            &lt;% var url = generate_sharing_link(post, theme.sharing_options[option].url) %&gt;            &lt;li class=&quot;post-action hide-xs&quot;&gt;                &lt;a class=&quot;post-action-btn btn btn--default&quot; target=&quot;new&quot; href=&quot;&lt;%= url %&gt;&quot; title=&quot;&lt;%= __(&apos;global.share_on_&apos; + option) %&gt;&quot;&gt;                    &lt;i class=&quot;fa &lt;%= icon %&gt;&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;                &lt;/a&gt;            &lt;/li&gt;        &lt;% &#125; %&gt;\n修改后如下：\n123456789&lt;% for(var option in theme.sharing_options)  &#123;%&gt;           &lt;% var icon = theme.sharing_options[option].icon %&gt;           &lt;% var url = generate_sharing_link(post, theme.sharing_options[option].url) %&gt;           &lt;li class=&quot;post-action hide-xs&quot;&gt;               &lt;a class=&quot;post-action-btn btn btn--default&quot; target=&quot;new&quot; href=&quot;&lt;%= url %&gt;&quot; title=&quot;&lt;%= __(&apos;global.share_on_&apos; + option) %&gt;&quot;&gt;                   &lt;i class=&quot;&lt;%= icon %&gt;&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;               &lt;/a&gt;           &lt;/li&gt;       &lt;% &#125; %&gt;\n此时基本上及达到了我想要的效果。\n修改主题的坑其实这个不算是坑，关键是自己对前端技术的不熟悉导致的，就是主题修改后必须重新编译运行才能生效，如果是直接下载的release版需要对主题进行修改的话就需要执行npm install命令安装全部的依赖。最后就是修改的主题后需要执行npm run prod（是在主题目录下）命令，整个过程如下：\n\n修改主题样式\n执行npm run prod使修改的主题生效\n最后在项目根目录依次执行hexo clean，hexo g，hexo s\n\n最后本次其实是简单的主题配置问题，后续会继续完善主题的美化工作。\n","dateCreated":"2018-08-03T16:43:00+08:00","dateModified":"2018-08-05T09:56:40+08:00","datePublished":"2018-08-03T16:43:00+08:00","description":"写在前面本来很早就打算打整一下Github Pages，一来没有发现自己中意的主题，二来也怪自己太懒，所以计划一直搁浅。其实，这次算是二次折腾，以前折腾过一次，但是不是很满意，这几天突然发现了自己满意的主题，于是便推翻重来！好了，话不多说，开整~。","headline":"Quick Start","image":["thumb-01.jpg","cover-01.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"https://yangshanlin.cn/2018/08/03/Quick-Start/"},"publisher":{"@type":"Organization","name":130,"sameAs":["https://github.com/yangshanlin","https://twitter.com/yangshanlin","https://facebook.com/yangshanlinlin","mailto:yangshanlinlin@gmail.com"],"image":"ic_head.jpg","logo":{"@type":"ImageObject","url":"ic_head.jpg"}},"url":"https://yangshanlin.cn/2018/08/03/Quick-Start/","keywords":"Other","thumbnailUrl":"thumb-01.jpg"}</script>
-    <meta name="description" content="写在前面本来很早就打算打整一下Github Pages，一来没有发现自己中意的主题，二来也怪自己太懒，所以计划一直搁浅。其实，这次算是二次折腾，以前折腾过一次，但是不是很满意，这几天突然发现了自己满意的主题，于是便推翻重来！好了，话不多说，开整~。">
+    <link rel="alternate" type="application/atom+xml" title="RSS" href="/atom.xml">
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":130,"sameAs":["https://github.com/yangshanlin","https://twitter.com/yangshanlin","https://facebook.com/yangshanlinlin","mailto:yangshanlinlin@gmail.com"],"image":"ic_head.jpg"},"articleBody":"写在前面本来很早就打算打整一下Github Pages，一来没有发现自己中意的主题，二来也怪自己太懒，所以计划一直搁浅。其实，这次算是二次折腾，以前折腾过一次，但是不是很满意，这几天突然发现了自己满意的主题，于是便推翻重来！好了，话不多说，开整~。\nHexo本次框架采用的是Hexo，一开始的时候用过jekyll，但最终采用了Hexo，Hexo官方说：快速、简洁且高效的博客框架，果断入坑。本文也不打算从安装说起，快速入门可参考官方文档，传送门。\n主题嗯~，感觉说到正事上来了，本次主要折腾的是主题。找过一段时间的主题，但是也没发现自己满意的主题（感觉自己的时间都浪费在了找主题上面- . -），最后还是找了几款不错的主题，可参考文末链接。本文主要采用的主题是Tranquilpeak，最开始采用的是Themia，而Themia最开始也是基于Tranquilpeak进行的二次开发，但我最近发现原作者对Tranquilpeak进行了修改，于是使用了Tranquilpeak并在上面进行了修改，而修改的样式参照了https://blog.codeest.moe/。另外本文所采用的主题版本为v3.0.0，如果采用不同的版本可能会出现不同的问题，建议采用和本文同步的版本。\n一些坑在主题的配置过程中也遇到了一些坑：\n\n本地的favicon无法显示。\ncoverImage和thumbnailImage无法显示。\n一些icon无法显示。\n修改主题的坑。\n\n本地的favicon无法显示hexo根目录下的_config.yml文件中的url属性会影响favicon的加载：http://127.0.0.1:4000/assets/images/favicon.ico其中的http://127.0.0.1:4000就是在根目录下的_config.ymlurl属性，此时如果将其改为https://yanghsanlin.com最终生成的url为https://yanghsanlin.com/assets/images/favicon.ico从而显示不出favicon。\n解决方法一修改themes/tranquilpeak/layout/_partial/head.ejs\n12345678910111213141516171819202122&lt;%\t//...\t\t//定义favicon变量\tvar favicon = null;    // 如果是远程链接则直接返回    if (is_remote_url(theme.favicon)) &#123;        favicon = theme.favicon;    &#125; else &#123;    \t//是本地的相对地址则使用相对地址生成图片地址        favicon = url_for(theme.image_dir + &apos;/&apos; + theme.favicon);    &#125;%&gt;&lt;head&gt; &lt;% if (theme.favicon) &#123; %&gt; &lt;!--在此处使用 favicon变量--&gt;        &lt;link rel=&quot;icon&quot; href=&quot;&lt;%= favicon %&gt;&quot;&gt;    &lt;% &#125; %&gt;&lt;/head&gt;\n解决方法二新建relative_url.js，其对应的地址如下。themes/tranquilpeak/scripts/helpers/relative_url.js\n12345678910111213141516'use strict';/** * Resolve asset relativeurl * @param url * @param from * @returns &#123;String&#125; */hexo.extend.helper.register('relative_url', function (from, url) &#123;    // check if url is remote    if (this.is_remote_url(url)) &#123;        return url;    &#125;    // generate an URL from the one given    return this.url_for(from + \"/\" + url);&#125;);\n修改themes/tranquilpeak/layout/_partial/head.ejs\n1234567&lt;head&gt; &lt;% if (theme.favicon) &#123; %&gt; \t\t&lt;!--在此处使用 favicon变量--&gt;        link rel=&quot;icon&quot; href=&quot;&lt;%= relative_url(theme.image_dir, theme.favicon) %&gt;&quot;&gt;    &lt;% &#125; %&gt;&lt;/head&gt;\nhexo的某些主题样式修改需要进行编译过后才能生效，比如hexo，此时的资源文件需要新放入sources/_images/目录下，然后在主题目录下运行npm run prod会将文件拷贝到sources/assets/images/。\ncoverImage和thumbnailImage无法显示这个其实和上面的favicon显示问题一样。也只是对路径引用进行了修改。具体可参考源码。\n一些icon无法显示这个其实不算很坑，原作者已经在其升级日这里面进行了说明。而我们只需要到Font Awesome v5 - icons用最新的icon替换即可。但是注意themes/tranquilpeak/layout/_partial/post/actions.ejs文件中对icon的遍历时添加了统一前缀fa，导致配置的icon无法显示。\n123456789&lt;% for(var option in theme.sharing_options)  &#123;%&gt;            &lt;% var icon = theme.sharing_options[option].icon %&gt;            &lt;% var url = generate_sharing_link(post, theme.sharing_options[option].url) %&gt;            &lt;li class=&quot;post-action hide-xs&quot;&gt;                &lt;a class=&quot;post-action-btn btn btn--default&quot; target=&quot;new&quot; href=&quot;&lt;%= url %&gt;&quot; title=&quot;&lt;%= __(&apos;global.share_on_&apos; + option) %&gt;&quot;&gt;                    &lt;i class=&quot;fa &lt;%= icon %&gt;&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;                &lt;/a&gt;            &lt;/li&gt;        &lt;% &#125; %&gt;\n修改后如下：\n123456789&lt;% for(var option in theme.sharing_options)  &#123;%&gt;           &lt;% var icon = theme.sharing_options[option].icon %&gt;           &lt;% var url = generate_sharing_link(post, theme.sharing_options[option].url) %&gt;           &lt;li class=&quot;post-action hide-xs&quot;&gt;               &lt;a class=&quot;post-action-btn btn btn--default&quot; target=&quot;new&quot; href=&quot;&lt;%= url %&gt;&quot; title=&quot;&lt;%= __(&apos;global.share_on_&apos; + option) %&gt;&quot;&gt;                   &lt;i class=&quot;&lt;%= icon %&gt;&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;               &lt;/a&gt;           &lt;/li&gt;       &lt;% &#125; %&gt;\n此时基本上及达到了我想要的效果。\n修改主题的坑其实这个不算是坑，关键是自己对前端技术的不熟悉导致的，就是主题修改后必须重新编译运行才能生效，如果是直接下载的release版需要对主题进行修改的话就需要执行npm install命令安装全部的依赖。最后就是修改的主题后需要执行npm run prod（是在主题目录下）命令，整个过程如下：\n\n修改主题样式\n执行npm run prod使修改的主题生效\n最后在项目根目录依次执行hexo clean，hexo g，hexo s\n\n最后本次其实是简单的主题配置问题，后续会继续完善主题的美化工作。\n","dateCreated":"2018-08-03T16:43:00+08:00","dateModified":"2018-08-11T23:29:40+08:00","datePublished":"2018-08-03T16:43:00+08:00","description":"写在前面本来很早就打算打整一下Github Pages，一来没有发现自己中意的主题，二来也怪自己太懒，所以计划一直搁浅。","headline":"第一弹","image":["thumb-01.jpg","cover-01.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"http://blog.yangshanlin.cn/2018/08/03/Quick-Start/"},"publisher":{"@type":"Organization","name":130,"sameAs":["https://github.com/yangshanlin","https://twitter.com/yangshanlin","https://facebook.com/yangshanlinlin","mailto:yangshanlinlin@gmail.com"],"image":"ic_head.jpg","logo":{"@type":"ImageObject","url":"ic_head.jpg"}},"url":"http://blog.yangshanlin.cn/2018/08/03/Quick-Start/","keywords":"Other","thumbnailUrl":"thumb-01.jpg"}</script>
+    <meta name="description" content="写在前面本来很早就打算打整一下Github Pages，一来没有发现自己中意的主题，二来也怪自己太懒，所以计划一直搁浅。">
 <meta name="keywords" content="Other">
 <meta property="og:type" content="blog">
-<meta property="og:title" content="Quick Start">
-<meta property="og:url" content="https://yangshanlin.cn/2018/08/03/Quick-Start/index.html">
+<meta property="og:title" content="第一弹">
+<meta property="og:url" content="http://blog.yangshanlin.cn/2018/08/03/Quick-Start/index.html">
 <meta property="og:site_name" content="130&#39;s Blog">
-<meta property="og:description" content="写在前面本来很早就打算打整一下Github Pages，一来没有发现自己中意的主题，二来也怪自己太懒，所以计划一直搁浅。其实，这次算是二次折腾，以前折腾过一次，但是不是很满意，这几天突然发现了自己满意的主题，于是便推翻重来！好了，话不多说，开整~。">
+<meta property="og:description" content="写在前面本来很早就打算打整一下Github Pages，一来没有发现自己中意的主题，二来也怪自己太懒，所以计划一直搁浅。">
 <meta property="og:locale" content="zh-cn">
-<meta property="og:updated_time" content="2018-08-05T01:56:40.266Z">
+<meta property="og:updated_time" content="2018-08-11T15:29:40.602Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Quick Start">
-<meta name="twitter:description" content="写在前面本来很早就打算打整一下Github Pages，一来没有发现自己中意的主题，二来也怪自己太懒，所以计划一直搁浅。其实，这次算是二次折腾，以前折腾过一次，但是不是很满意，这几天突然发现了自己满意的主题，于是便推翻重来！好了，话不多说，开整~。">
+<meta name="twitter:title" content="第一弹">
+<meta name="twitter:description" content="写在前面本来很早就打算打整一下Github Pages，一来没有发现自己中意的主题，二来也怪自己太懒，所以计划一直搁浅。">
     
     
-        
     
     
-        <meta property="og:image" content="https://yangshanlin.cn/assets/images/ic_head.jpg"/>
+    
+    <meta property="og:image" content="http://blog.yangshanlin.cn/assets/images/ic_head.jpg"/>
     
     
-        <meta property="og:image" content="https://yangshanlin.cn/2018/08/03/Quick-Start/thumb-01.jpg"/>
-        <meta class="swiftype" name="image" data-type="enum" content="https://yangshanlin.cn/2018/08/03/Quick-Start/thumb-01.jpg" />
+    <meta property="og:image" content="http://blog.yangshanlin.cn/2018/08/03/Quick-Start/thumb-01.jpg"/>
+    <meta class="swiftype" name="image" data-type="enum"
+          content="http://blog.yangshanlin.cn/2018/08/03/Quick-Start/thumb-01.jpg"/>
     
     
-        <meta property="og:image" content="https://yangshanlin.cn/2018/08/03/Quick-Start/cover-01.jpg"/>
-        <meta class="swiftype" name="image" data-type="enum" content="https://yangshanlin.cn/2018/08/03/Quick-Start/cover-01.jpg" />
+    <meta property="og:image" content="http://blog.yangshanlin.cn/2018/08/03/Quick-Start/cover-01.jpg"/>
+    <meta class="swiftype" name="image" data-type="enum"
+          content="http://blog.yangshanlin.cn/2018/08/03/Quick-Start/cover-01.jpg"/>
     
     
     <!--STYLES-->
-    <link rel="stylesheet" href="/assets/css/style-aad36bue6pwi2rfc5rrbwr9mpxaobhqel90zju7tlhmmvzcuqilzal8gnft7.min.css">
+    <link rel="stylesheet" href="/assets/css/style-qqn2g8ow1mqpmtbotoce9kw4vzpklxu0hifuujwugtaxpkrml7p6ao28iypg.min.css">
     <!--STYLES END-->
     
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-123723014-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+
 
     
+    
+    <script>(function (i, s, o, g, r, a, m) {
+            i["DaoVoiceObject"] = r;
+            i[r] = i[r] || function () {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date();
+            a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+            a.async = 1;
+            a.src = g;
+            a.charset = "utf-8";
+            m.parentNode.insertBefore(a, m)
+        })(window, document, "script", ('https:' == document.location.protocol ? 'https:' : 'http:') + "//widget.daovoice.io/widget/0ba5a2ce.js", "daovoice")
+        daovoice('init', {
+            app_id: "2fc1f5b3"
+        });
+        daovoice('update');
+    </script>
+    
+
+    <!--<script>-->
+        <!--(function(){-->
+            <!--if('{{ page.password }}'){-->
+                <!--if (prompt('请输入文章密码') !== '{{ page.password }}'){-->
+                    <!--alert('密码错误！');-->
+                    <!--history.back();-->
+                <!--}-->
+            <!--}-->
+        <!--})();-->
+    <!--</script>-->
+
 </head>
 
     <body>
@@ -93,7 +137,7 @@
                     <img class="sidebar-profile-picture" src="/assets/images/ic_head.jpg" alt="作者的图片"/>
                 </a>
                 <span class="sidebar-profile-name">130</span>
-                <span class="sidebar-profile-motto">Show me the Code.</span>
+                <span class="sidebar-profile-motto">不知不觉、后知后觉</span>
             </div>
         
         
@@ -229,7 +273,7 @@
                             title="RSS"
                         >
                     
-                        <i class="sidebar-button-icon fa fa-rss" aria-hidden="true"></i>
+                        <i class="sidebar-button-icon fas fa-rss" aria-hidden="true"></i>
                         <span class="sidebar-button-desc">RSS</span>
                     </a>
             </li>
@@ -249,7 +293,7 @@
                 <div class="post-header main-content-wrap text-left">
     
         <h1 class="post-title">
-            Quick Start
+            第一弹
         </h1>
     
     
@@ -278,7 +322,7 @@
     
     <div class="post-content markdown">
         <div class="main-content-wrap">
-            <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>本来很早就打算打整一下<code>Github Pages</code>，一来没有发现自己中意的主题，二来也怪自己太懒，所以计划一直搁浅。其实，这次算是二次折腾，以前折腾过一次，但是不是很满意，这几天突然发现了自己满意的主题，于是便推翻重来！好了，话不多说，开整~。<br><a id="more"></a></p>
+            <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>本来很早就打算打整一下<code>Github Pages</code>，一来没有发现自己中意的主题，二来也怪自己太懒，所以计划一直搁浅。<br><a id="more"></a><br>其实，这次算是二次折腾，以前折腾过一次，但是不是很满意，这几天突然发现了自己满意的主题，于是便推翻重来！好了，话不多说，开整~。</p>
 <h1 id="Hexo"><a href="#Hexo" class="headerlink" title="Hexo"></a>Hexo</h1><p>本次框架采用的是<code>Hexo</code>，一开始的时候用过<code>jekyll</code>，但最终采用了<code>Hexo</code>，<code>Hexo</code>官方说：<code>快速、简洁且高效的博客框架</code>，果断入坑。本文也不打算从安装说起，快速入门可参考官方文档，<a href="http://hexo.io/zh-cn/docs" target="_blank" rel="noopener">传送门</a>。</p>
 <h1 id="主题"><a href="#主题" class="headerlink" title="主题"></a>主题</h1><p>嗯~，感觉说到正事上来了，本次主要折腾的是主题。找过一段时间的主题，但是也没发现自己满意的主题（感觉自己的时间都浪费在了找主题上面- . -），最后还是找了几款不错的主题，可参考文末链接。本文主要采用的主题是<a href="https://github.com/LouisBarranqueiro/hexo-theme-tranquilpeak" target="_blank" rel="noopener">Tranquilpeak</a>，最开始采用的是<a href="https://github.com/kaedea/hexo-theme-themia" target="_blank" rel="noopener">Themia</a>，而<a href="https://github.com/kaedea/hexo-theme-themia" target="_blank" rel="noopener">Themia</a>最开始也是基于<a href="https://github.com/LouisBarranqueiro/hexo-theme-tranquilpeak" target="_blank" rel="noopener">Tranquilpeak</a>进行的二次开发，但我最近发现原作者对<a href="https://github.com/LouisBarranqueiro/hexo-theme-tranquilpeak" target="_blank" rel="noopener">Tranquilpeak</a>进行了修改，于是使用了<a href="https://github.com/LouisBarranqueiro/hexo-theme-tranquilpeak" target="_blank" rel="noopener">Tranquilpeak</a>并在上面进行了修改，而修改的样式参照了<a href="https://blog.codeest.moe/" target="_blank" rel="noopener">https://blog.codeest.moe/</a>。另外本文所采用的主题版本为<a href="https://github.com/LouisBarranqueiro/hexo-theme-tranquilpeak/releases/tag/v3.0.0" target="_blank" rel="noopener">v3.0.0</a>，如果采用不同的版本可能会出现不同的问题，建议采用和本文同步的版本。</p>
 <h2 id="一些坑"><a href="#一些坑" class="headerlink" title="一些坑"></a>一些坑</h2><p>在主题的配置过程中也遇到了一些坑：</p>
@@ -316,6 +360,37 @@
     </div>
     <div id="post-footer" class="post-footer main-content-wrap">
         
+<div class="my_post_copyright">
+    <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+    <!-- JS库 sweetalert 可修改路径 -->
+    <script src="https://cdn.bootcss.com/jquery/2.0.0/jquery.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <p><span>本文标题:</span><a href="/2018/08/03/Quick-Start/">第一弹</a></p>
+    <p><span>文章作者:</span><a href="/" title="访问 130 的个人博客">130</a></p>
+    <p><span>发布时间:</span>2018年08月03日 - 16:08</p>
+    <p><span>最后更新:</span>2018年08月11日 - 23:08</p>
+    <p><span>原始链接:</span><a href="/2018/08/03/Quick-Start/" title="page.title">http://blog.yangshanlin.cn/2018/08/03/Quick-Start/</a>
+        <span class="copy-path"  title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="http://blog.yangshanlin.cn/2018/08/03/Quick-Start/"  aria-label="复制成功！"></i></span>
+    </p>
+    <p><span>许可协议:</span><i class="fab fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>
+</div>
+<script>
+    var clipboard = new Clipboard('.fa-clipboard');
+    $(".fa-clipboard").click(function(){
+        clipboard.on('success', function(){
+            swal({
+                title: "",
+                text: '复制成功',
+                icon: "success",
+                showConfirmButton: true
+            });
+        });
+    });
+</script>
+
+
+        
             <div class="post-footer-tags">
                 <span class="text-color-light text-small">标签</span><br/>
                 
@@ -329,7 +404,8 @@
         <ul class="post-actions post-action-nav">
             <li class="post-action">
                 
-                    <a class="post-action-btn btn btn--disabled">
+                    
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2018/08/07/Config-Theme/" data-tooltip="主题美化" aria-label="上一篇: 主题美化">
                 
                     <i class="fa fa-angle-left" aria-hidden="true"></i>
                     <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
@@ -355,7 +431,7 @@
             
             
             <li class="post-action hide-xs">
-                <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://yangshanlin.cn/2018/08/03/Quick-Start/" title="分享到 Facebook">
+                <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.yangshanlin.cn/2018/08/03/Quick-Start/" title="分享到 Facebook">
                     <i class="fab fa-facebook-square" aria-hidden="true"></i>
                 </a>
             </li>
@@ -363,7 +439,7 @@
             
             
             <li class="post-action hide-xs">
-                <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=https://yangshanlin.cn/2018/08/03/Quick-Start/" title="分享到 Twitter">
+                <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http://blog.yangshanlin.cn/2018/08/03/Quick-Start/" title="分享到 Twitter">
                     <i class="fab fa-twitter" aria-hidden="true"></i>
                 </a>
             </li>
@@ -371,7 +447,7 @@
             
             
             <li class="post-action hide-xs">
-                <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=https://yangshanlin.cn/2018/08/03/Quick-Start/" title="分享到 Google+">
+                <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http://blog.yangshanlin.cn/2018/08/03/Quick-Start/" title="分享到 Google+">
                     <i class="fab fa-google-plus-g" aria-hidden="true"></i>
                 </a>
             </li>
@@ -393,6 +469,31 @@
             </a>
         </li>
     </ul>
+</div>
+<div class ="post-donate">
+    <div id="donate_board" class="donate_bar center">
+        <a id="btn_donate" class="btn_donate" href="javascript:;" title="打赏">打脸赞赏戳这里OwO</a>
+        <br>
+    </div>
+    <div id="donate_guide" class="donate_bar center hidden" >
+        <!-- 支付宝打赏图案 -->
+        <img src="/assets/images/alipay.jpg" alt="支付宝打赏">
+        <!-- 微信打赏图案 -->
+        <img src="/assets/images/wxpay.png" alt="微信打赏">
+    </div>
+    <script type="text/javascript">
+        let btnDonate = document.getElementById('btn_donate');
+        btnDonate.onclick = function(){
+            var qr=document.getElementById("donate_guide");
+            if ("none"===qr.style.display) {
+                qr.style.display="block"
+                btnDonate.innerText = "我再想想->.->"
+            } else {
+                qr.style.display="none"
+                btnDonate.innerText = "打脸赞赏戳这里OwO"
+            }
+        }
+    </script>
 </div>
 
 
@@ -410,13 +511,40 @@
 
 
                 <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        License - <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/deed.en">Attribution-NonCommercial-NoDerivatives 4.0 International</a>.
+    </span>
+    <br>
+    <!--<div id="footer-img"></div>-->
     <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
     <div class="powered-by">
         <i class="fa fa-user-md"></i>
         <span id="busuanzi_container_site_uv">
-        本站访客数:
-        <span id="busuanzi_value_site_uv"></span>
+        Total <span id="busuanzi_value_site_uv"></span> visitors.
         </span>
+
+        <!--<span id="busuanzi_container_site_pv">-->
+        <!--Total visits <span id="busuanzi_value_site_pv"></span> times.-->
+        <!--</span>-->
+
+        
+        <span id="timeDate">0</span><span id="times">0</span>
+        <script>
+            var now = new Date();
+            function createtime() {
+                var grt= new Date("06/06/2016 06:06:00");//此处修改你的建站时间或者网站上线时间
+                now.setTime(now.getTime()+250);
+                days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+                hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+                if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+                mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+                seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+                snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+                document.getElementById("timeDate").innerHTML = "Blog age: "+dnum+" day ";
+                document.getElementById("times").innerHTML = hnum + " h " + mnum + " m " + snum + " s";
+            }
+            setInterval("createtime()",250);
+        </script>
     </div>
 
     <span class="copyrights">
@@ -432,7 +560,8 @@
         <ul class="post-actions post-action-nav">
             <li class="post-action">
                 
-                    <a class="post-action-btn btn btn--disabled">
+                    
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2018/08/07/Config-Theme/" data-tooltip="主题美化" aria-label="上一篇: 主题美化">
                 
                     <i class="fa fa-angle-left" aria-hidden="true"></i>
                     <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
@@ -458,7 +587,7 @@
             
             
             <li class="post-action hide-xs">
-                <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://yangshanlin.cn/2018/08/03/Quick-Start/" title="分享到 Facebook">
+                <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.yangshanlin.cn/2018/08/03/Quick-Start/" title="分享到 Facebook">
                     <i class="fab fa-facebook-square" aria-hidden="true"></i>
                 </a>
             </li>
@@ -466,7 +595,7 @@
             
             
             <li class="post-action hide-xs">
-                <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=https://yangshanlin.cn/2018/08/03/Quick-Start/" title="分享到 Twitter">
+                <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http://blog.yangshanlin.cn/2018/08/03/Quick-Start/" title="分享到 Twitter">
                     <i class="fab fa-twitter" aria-hidden="true"></i>
                 </a>
             </li>
@@ -474,7 +603,7 @@
             
             
             <li class="post-action hide-xs">
-                <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=https://yangshanlin.cn/2018/08/03/Quick-Start/" title="分享到 Google+">
+                <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http://blog.yangshanlin.cn/2018/08/03/Quick-Start/" title="分享到 Google+">
                     <i class="fab fa-google-plus-g" aria-hidden="true"></i>
                 </a>
             </li>
@@ -497,6 +626,31 @@
         </li>
     </ul>
 </div>
+<div class ="post-donate">
+    <div id="donate_board" class="donate_bar center">
+        <a id="btn_donate" class="btn_donate" href="javascript:;" title="打赏">打脸赞赏戳这里OwO</a>
+        <br>
+    </div>
+    <div id="donate_guide" class="donate_bar center hidden" >
+        <!-- 支付宝打赏图案 -->
+        <img src="/assets/images/alipay.jpg" alt="支付宝打赏">
+        <!-- 微信打赏图案 -->
+        <img src="/assets/images/wxpay.png" alt="微信打赏">
+    </div>
+    <script type="text/javascript">
+        let btnDonate = document.getElementById('btn_donate');
+        btnDonate.onclick = function(){
+            var qr=document.getElementById("donate_guide");
+            if ("none"===qr.style.display) {
+                qr.style.display="block"
+                btnDonate.innerText = "我再想想->.->"
+            } else {
+                qr.style.display="none"
+                btnDonate.innerText = "打脸赞赏戳这里OwO"
+            }
+        }
+    </script>
+</div>
 
 
                 </div>
@@ -507,7 +661,7 @@
             
             
             <li class="share-option">
-                <a class="share-option-btn" target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://yangshanlin.cn/2018/08/03/Quick-Start/">
+                <a class="share-option-btn" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.yangshanlin.cn/2018/08/03/Quick-Start/">
                     <i class="fa fab fa-facebook-square" aria-hidden="true"></i><span>分享到 Facebook</span>
                 </a>
             </li>
@@ -515,7 +669,7 @@
             
             
             <li class="share-option">
-                <a class="share-option-btn" target="new" href="https://twitter.com/intent/tweet?text=https://yangshanlin.cn/2018/08/03/Quick-Start/">
+                <a class="share-option-btn" target="new" href="https://twitter.com/intent/tweet?text=http://blog.yangshanlin.cn/2018/08/03/Quick-Start/">
                     <i class="fa fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
                 </a>
             </li>
@@ -523,13 +677,14 @@
             
             
             <li class="share-option">
-                <a class="share-option-btn" target="new" href="https://plus.google.com/share?url=https://yangshanlin.cn/2018/08/03/Quick-Start/">
+                <a class="share-option-btn" target="new" href="https://plus.google.com/share?url=http://blog.yangshanlin.cn/2018/08/03/Quick-Start/">
                     <i class="fa fab fa-google-plus-g" aria-hidden="true"></i><span>分享到 Google+</span>
                 </a>
             </li>
         
     </ul>
 </div>
+
 
             
         </div>
@@ -551,7 +706,7 @@
         
             <h4 id="about-card-name">130</h4>
         
-            <div id="about-card-bio"><p>Coder<br/><a href="https://me.yangshanlin.cn/">「 About Me 」</a><br/><a href="https://www.instagram.com/yangshanlin/">「 Instagram 」</a></p>
+            <div id="about-card-bio"><p>不知不觉、后知后觉<br/><a href="https://me.yangshanlin.cn/">「 About Me 」</a></p>
 </div>
         
         
@@ -576,13 +731,13 @@
         
 <div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
         <!--SCRIPTS-->
-<script src="/assets/js/script-meqdbdyyliyaorxlaa0cuqvcrspvpuwqqp7aen8aneik3yrxckvdzbbibsqf.min.js"></script>
+<script src="/assets/js/script-9dzotc4yyywgpiic4evn0id7pbwbpwdsnoiqh0iqdp9dx4rnm4jo0x6ef1be.min.js"></script>
 <!--SCRIPTS END-->
 
     
         <script>
              var disqus_config = function () {
-                 this.page.url = 'https://yangshanlin.cn/2018/08/03/Quick-Start/';
+                 this.page.url = 'http://blog.yangshanlin.cn/2018/08/03/Quick-Start/';
                  
                     this.page.identifier = '2018/08/03/Quick-Start/';
                  
@@ -600,5 +755,7 @@
 
 
 
-    <script src="/live2dw/lib/L2Dwidget.min.js?0c58a1486de42ac6cc1c59c7d98ae887"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"right","width":100,"height":200},"mobile":{"show":false},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+        <!--崩溃欺骗-->
+        <!--<script src="//src/crash_cheat.js"></script>-->
+    <script src="/live2dw/lib/L2Dwidget.min.js?0c58a1486de42ac6cc1c59c7d98ae887"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"right","width":100,"height":200,"vOffset":-60},"mobile":{"show":true,"scale":0.5},"react":{"opacityDefault":0.9,"opacityOnHover":0.1},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
 </html>
