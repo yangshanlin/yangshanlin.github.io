@@ -281,6 +281,7 @@
     }
   });
 })(jQuery);
+;var bszCaller,bszTag;!function(){var c,d,e,a=!1,b=[];ready=function(c){return a||"interactive"===document.readyState||"complete"===document.readyState?c.call(document):b.push(function(){return c.call(this)}),this},d=function(){for(var a=0,c=b.length;c>a;a++)b[a].apply(document);b=[]},e=function(){a||(a=!0,d.call(window),document.removeEventListener?document.removeEventListener("DOMContentLoaded",e,!1):document.attachEvent&&(document.detachEvent("onreadystatechange",e),window==window.top&&(clearInterval(c),c=null)))},document.addEventListener?document.addEventListener("DOMContentLoaded",e,!1):document.attachEvent&&(document.attachEvent("onreadystatechange",function(){/loaded|complete/.test(document.readyState)&&e()}),window==window.top&&(c=setInterval(function(){try{a||document.documentElement.doScroll("left")}catch(b){return}e()},5)))}(),bszCaller={fetch:function(a,b){var c="BusuanziCallback_"+Math.floor(1099511627776*Math.random());window[c]=this.evalCall(b),a=a.replace("=BusuanziCallback","="+c),scriptTag=document.createElement("SCRIPT"),scriptTag.type="text/javascript",scriptTag.defer=!0,scriptTag.src=a,document.getElementsByTagName("HEAD")[0].appendChild(scriptTag)},evalCall:function(a){return function(b){ready(function(){try{a(b),scriptTag.parentElement.removeChild(scriptTag)}catch(c){bszTag.hides()}})}}},bszCaller.fetch("//busuanzi.ibruce.info/busuanzi?jsonpCallback=BusuanziCallback",function(a){bszTag.texts(a),bszTag.shows()}),bszTag={bszs:["site_pv","page_pv","site_uv"],texts:function(a){this.bszs.map(function(b){var c=document.getElementById("busuanzi_value_"+b);c&&(c.innerHTML=a[b])})},hides:function(){this.bszs.map(function(a){var b=document.getElementById("busuanzi_container_"+a);b&&(b.style.display="none")})},shows:function(){this.bszs.map(function(a){var b=document.getElementById("busuanzi_container_"+a);b&&(b.style.display="inline")})}};
 ;(function($) {
   'use strict';
 
@@ -503,6 +504,195 @@
     };
     var resizer = new CodeBlockResizer('figure.highlight');
     resizer.run();
+  });
+})(jQuery);
+;(function($) {
+  'use strict';
+
+  /**
+   * Donate modal
+   * @constructor
+   */
+  var DonateModal = function() {
+    this.$openButton = $('#donate-author');
+    this.$donateModal = $('#donate');
+    this.$closeButton = $('#donate-btn-close');
+    this.$donateCard = $('#donate-card');
+    this.$donateImg= $('#donate-card-picture');
+    this.$alipayButton= $('#alipay-tab');
+    this.$wechatPayButton= $('#wechatpay-tab');
+  };
+
+  DonateModal.prototype = {
+    /**
+     * Run feature
+     * @returns {void}
+     */
+    run: function() {
+      var self = this;
+
+      // open modal when open button is clicked
+      self.$openButton.click(function() {
+        self.open();
+      });
+
+      // open modal when `s` button is pressed
+      $(document).keyup(function(event) {
+        var target = event.target || event.srcElement;
+        // exit if user is focusing an input or textarea
+        var tagName = target.tagName.toUpperCase();
+        if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
+          return;
+        }
+
+        if (event.keyCode === 83 && !self.$donateModal.is(':visible')) {
+          self.open();
+        }
+      });
+
+      // close button when overlay is clicked
+      self.$donateModal.click(function(e) {
+        if (e.target === this) {
+          self.close();
+        }
+      });
+
+      // close modal when close button is clicked
+      self.$closeButton.click(function() {
+        self.close();
+      });
+
+      // close modal when `ESC` button is pressed
+      $(document).keyup(function(e) {
+        if (e.keyCode === 27 && self.$donateModal.is(':visible')) {
+          self.close();
+        }
+      });
+
+      // 切换图片
+      self.$alipayButton.click(function() {
+        self.$donateImg.attr("src", "/assets/images/alipay.png");
+      });
+
+      // 切换图片
+      self.$wechatPayButton.click(function() {
+        self.$donateImg.attr("src", "/assets/images/wxpay.png");
+      });
+    },
+
+    /**
+     * Open donate modal and display overlay
+     * @returns {void}
+     */
+    open: function() {
+      this.showDonateModal();
+      this.showOverlay();
+    },
+
+    /**
+     * Close donate modal and overlay
+     * @returns {void}
+     */
+    close: function() {
+      this.hideDonateModal();
+      this.hideOverlay();
+    },
+
+    /**
+     * Show donate modal
+     * @returns {void}
+     */
+    showDonateModal: function() {
+      var self = this;
+      this.$donateModal.fadeIn();
+      // Small timeout to drop the donate card after that
+      // the donate card fade in and the blog fade out
+      // setTimeout(function() {
+      //   self.dropAboutCard();
+      // }, 300);
+    },
+
+    /**
+     * Hide donate modal
+     * @returns {void}
+     */
+    hideDonateModal: function() {
+      // Lift the donate card
+      // this.liftAboutCard();
+      this.$donateModal.fadeOut();
+    },
+
+    /**
+     * Show overlay
+     * @returns {void}
+     */
+    showOverlay: function() {
+      $('body').append('<div class="overlay"></div>');
+      $('.overlay').fadeIn();
+      $('body').css('overflow', 'hidden');
+    },
+
+    /**
+     * Hide overlay
+     * @returns {void}
+     */
+    hideOverlay: function() {
+      $('.overlay').fadeOut(function() {
+        $(this).remove();
+        $('body').css('overflow', 'auto');
+      });
+    },
+    /**
+     * Slide the card to the middle
+     * @return {void}
+     */
+    dropAboutCard: function() {
+      var self = this;
+      var donateCardHeight = self.$donateCard.innerHeight();
+      // default offset from top
+      var offsetTop = donateCardHeight / 2;
+      // if card is longer than the window
+      // scroll is enable
+      // and re-define offsetTop
+      if (donateCardHeight + 30 > $(window).height()) {
+        offsetTop = donateCardHeight;
+      }
+      self.$donateCard
+          .css('top', '0px')
+          .css('top', '-' + donateCardHeight + 'px')
+          .show(500, function() {
+            self.$donateCard.animate({
+              top: '+=' + offsetTop + 'px'
+            });
+          });
+    },
+
+    /**
+     * Slide the card to the top
+     * @return {void}
+     */
+    liftAboutCard: function() {
+      var self = this;
+      var donateCardHeight = self.$donateCard.innerHeight();
+      // default offset from top
+      var offsetTop = ($(window).height() / 2) - (donateCardHeight / 2) + donateCardHeight;
+      if (donateCardHeight + 30 > $(window).height()) {
+        offsetTop = donateCardHeight;
+      }
+      self.$donateCard.animate({
+        top: '-=' + offsetTop + 'px'
+      }, 500, function() {
+        self.$donateCard.hide();
+        self.$donateCard.removeAttr('style');
+      });
+    }
+  };
+
+
+
+  $(document).ready(function() {
+    var donateModal = new DonateModal();
+    donateModal.run();
   });
 })(jQuery);
 ;(function($) {
@@ -893,6 +1083,9 @@
     search: function(search) {
       var self = this;
       this.algolia.search(search, function(err, content) {
+        console.log('err:', err);
+        console.log('content:', content);
+        debugger;
         if (!err) {
           self.showResults(content.hits);
           self.showResultsCount(content.nbHits);
@@ -910,12 +1103,19 @@
       posts.forEach(function(post) {
         var lang = window.navigator.userLanguage || window.navigator.language || post.lang;
 
+        // 兼容本地相对路径图片地址
+        var thumbnailImageUrl = "";
+        if (post.path && post.path.indexOf('//') >= 0 || post.path === "index.html") {
+            thumbnailImageUrl = post.thumbnailImageUrl;
+        } else {
+            thumbnailImageUrl = "../../../../" + post.thumbnailImageUrl;
+        }
         html += '<div class="media">';
-        if (post.thumbnailImageUrl) {
+        if (thumbnailImageUrl) {
           html += '<div class="media-left">';
           html += '<a class="link-unstyled" href="' + (post.link || post.permalink) + '">';
           html += '<img class="media-image" ' +
-            'src="' + post.thumbnailImageUrl + '" ' +
+            'src="' + thumbnailImageUrl + '" ' +
             'width="90" height="90"/>';
           html += '</a>';
           html += '</div>';

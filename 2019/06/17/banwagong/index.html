@@ -1,0 +1,904 @@
+
+<!DOCTYPE html>
+<html lang="zh-cn">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="130&#39;s Blog">
+    <title>搬瓦工 - 130&#39;s Blog</title>
+    <meta name="author" content="130">
+    
+    
+    <link rel="icon" href="/assets/images/favicon.ico">
+    
+    
+    <link rel="alternate" type="application/atom+xml" title="RSS" href="/atom.xml">
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":130,"sameAs":["https://github.com/yangshanlin","mailto:yangshanlinlin@gmail.com","/atom.xml"],"image":"ic_head.jpg"},"articleBody":"\n始末这两天发现Google上不去了，想到之前也出现过类似的问题，于是登录到搬瓦工后台，从新设置了SS端口，以为这就完事了，打开浏览器还是无法加载页面，一脸的懵逼（改了也还不行？），于是本着不会就百度的想法，发现IP被墙了。可以通过检测地址来检查IP是否被墙，如果以China开头的显示为红色就代表你的IP已经被墙了，如图1所示：\n\n图1 检测结果如果遇到IP被墙那就不能再使用之前的方式直接使用IP来进行fanqiang了，搬瓦工提供了一键换IP的服务，按照操作支付相应的费用即可进行更换IP服务，但是这种方式的话还是有被墙的风险，在网上有搜索了一番发现v2ray这个软件，可以结合cloudflare来进行访问，并且墙不会检测到对应的IP地址。\n配置v2ray + cloudflarev2ray服务端配置网上教程还是差不多的，本文不做详细说明，只说一下我遇到的一个问题就是由于IP被墙，本地命令行无法直接连接到远程服务，而搬瓦工的后台命令行比较奇葩操作起来很是不便，Root shell - basic只能够进行基本的查看命令，而不能进行交互式的响应，因为需要配置v2ray所以此命令行被pass掉，Root shell - advanced这个执行命令后很久都不会有响应结果，也被pass，最后还是选择了Root shell - interactive来进行安装，但是该命令行是不支持复制粘贴等操作，所有的命令需要手动输入。\n打开Root shell - interactive后会弹出一个命令行窗口，在里面执行命令就好了，由于该命令行不能显示其它颜色，所以配置的时候就是盲操作，特别需要注意的是，第一步需要选择1.安装，第二步需要选择4.WebSocket + TLS，其它操作可以结合网上的教程。\n\n图 1 命令显示异常我的传输协议选择是的：WebSocket + TLS，据说效果更好。按照网上的教程，到这里服务端就配置好了，但是我最后测试的时候发现依然打不开Google，还是在网上找解决办法时一篇教程给了我启示，自己手动在/etc/v2ray/config.json文件中添加&quot;listen&quot;: &quot;你的IP地址&quot;，后完美解决。操作步骤如下：\n\n在Root shell - basic执行命令vim /etc/v2ray/config.json会弹出一个框，如图 2 所示\n\n\n图 2 编辑配置\n\n图 2 中点击Open file后会进入编辑模式，添加如图 3 所示的配置保存即可。\n\n\n图 3 编辑配置结果完整配置文件如下：\n123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100101102103104105106107108109110111112113114115116117118119120121122123124125126127128129130131132133134135136137138139140141142143144145146147148149150151152&#123;\t\"log\": &#123;\t\t\"access\": \"/var/log/v2ray/access.log\",\t\t\"error\": \"/var/log/v2ray/error.log\",\t\t\"loglevel\": \"warning\"\t&#125;,\t\"inbounds\": [\t\t&#123;\t\t\t\"port\": 10086,\t\t\t\"protocol\": \"vmess\",\t\t\t\"listen\": \"你的IP地址\",\t\t\t\"settings\": &#123;\t\t\t\t\"clients\": [\t\t\t\t\t&#123;\t\t\t\t\t\t\"id\": \"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\",\t\t\t\t\t\t\"level\": 1,\t\t\t\t\t\t\"alterId\": 233\t\t\t\t\t&#125;\t\t\t\t]\t\t\t&#125;,\t\t\t\"streamSettings\": &#123;\t\t\t\t\"network\": \"ws\"\t\t\t&#125;,\t\t\t\"sniffing\": &#123;\t\t\t\t\"enabled\": true,\t\t\t\t\"destOverride\": [\t\t\t\t\t\"http\",\t\t\t\t\t\"tls\"\t\t\t\t]\t\t\t&#125;\t\t&#125;\t\t//include_ss\t\t//include_socks\t\t//include_mtproto\t\t//include_in_config\t\t//\t],\t\"outbounds\": [\t\t&#123;\t\t\t\"protocol\": \"freedom\",\t\t\t\"settings\": &#123;&#125;\t\t&#125;,\t\t&#123;\t\t\t\"protocol\": \"blackhole\",\t\t\t\"settings\": &#123;&#125;,\t\t\t\"tag\": \"blocked\"\t\t&#125;,\t\t&#123;\t\t\t\"protocol\": \"freedom\",\t\t\t\"settings\": &#123;&#125;,\t\t\t\"tag\": \"direct\"\t\t&#125;,\t\t&#123;\t\t\t\"protocol\": \"mtproto\",\t\t\t\"settings\": &#123;&#125;,\t\t\t\"tag\": \"tg-out\"\t\t&#125;\t\t//include_out_config\t\t//\t],\t\"dns\": &#123;\t\t\"server\": [\t\t\t\"1.1.1.1\",\t\t\t\"1.0.0.1\",\t\t\t\"8.8.8.8\",\t\t\t\"8.8.4.4\",\t\t\t\"localhost\"\t\t]\t&#125;,\t\"routing\": &#123;\t\t\"domainStrategy\": \"IPOnDemand\",\t\t\"rules\": [\t\t\t&#123;\t\t\t\t\"type\": \"field\",\t\t\t\t\"ip\": [\t\t\t\t\t\"0.0.0.0/8\",\t\t\t\t\t\"10.0.0.0/8\",\t\t\t\t\t\"100.64.0.0/10\",\t\t\t\t\t\"127.0.0.0/8\",\t\t\t\t\t\"169.254.0.0/16\",\t\t\t\t\t\"172.16.0.0/12\",\t\t\t\t\t\"192.0.0.0/24\",\t\t\t\t\t\"192.0.2.0/24\",\t\t\t\t\t\"192.168.0.0/16\",\t\t\t\t\t\"198.18.0.0/15\",\t\t\t\t\t\"198.51.100.0/24\",\t\t\t\t\t\"203.0.113.0/24\",\t\t\t\t\t\"::1/128\",\t\t\t\t\t\"fc00::/7\",\t\t\t\t\t\"fe80::/10\"\t\t\t\t],\t\t\t\t\"outboundTag\": \"blocked\"\t\t\t&#125;,\t\t\t&#123;\t\t\t\t\"type\": \"field\",\t\t\t\t\"inboundTag\": [\"tg-in\"],\t\t\t\t\"outboundTag\": \"tg-out\"\t\t\t&#125;\t\t\t,\t\t\t&#123;\t\t\t\t\"type\": \"field\",\t\t\t\t\"domain\": [\t\t\t\t\t\"domain:epochtimes.com\",\t\t\t\t\t\"domain:epochtimes.com.tw\",\t\t\t\t\t\"domain:epochtimes.fr\",\t\t\t\t\t\"domain:epochtimes.de\",\t\t\t\t\t\"domain:epochtimes.jp\",\t\t\t\t\t\"domain:epochtimes.ru\",\t\t\t\t\t\"domain:epochtimes.co.il\",\t\t\t\t\t\"domain:epochtimes.co.kr\",\t\t\t\t\t\"domain:epochtimes-romania.com\",\t\t\t\t\t\"domain:erabaru.net\",\t\t\t\t\t\"domain:lagranepoca.com\",\t\t\t\t\t\"domain:theepochtimes.com\",\t\t\t\t\t\"domain:ntdtv.com\",\t\t\t\t\t\"domain:ntd.tv\",\t\t\t\t\t\"domain:ntdtv-dc.com\",\t\t\t\t\t\"domain:ntdtv.com.tw\",\t\t\t\t\t\"domain:minghui.org\",\t\t\t\t\t\"domain:renminbao.com\",\t\t\t\t\t\"domain:dafahao.com\",\t\t\t\t\t\"domain:dongtaiwang.com\",\t\t\t\t\t\"domain:falundafa.org\",\t\t\t\t\t\"domain:wujieliulan.com\",\t\t\t\t\t\"domain:ninecommentaries.com\",\t\t\t\t\t\"domain:shenyun.com\"\t\t\t\t],\t\t\t\t\"outboundTag\": \"blocked\"\t\t\t&#125;\t\t\t,                &#123;                    \"type\": \"field\",                    \"protocol\": [                        \"bittorrent\"                    ],                    \"outboundTag\": \"blocked\"                &#125;\t\t\t//include_ban_ad\t\t\t//include_rules\t\t\t//\t\t]\t&#125;,\t\"transport\": &#123;\t\t\"kcpSettings\": &#123;            \"uplinkCapacity\": 100,            \"downlinkCapacity\": 100,            \"congestion\": true        &#125;,\t\t\"sockopt\": &#123;\t\t\t\"tcpFastOpen\": true\t\t&#125;\t&#125;&#125;\nv2ray MAC端配置配置如图 4，图 5，图 6所示：\n\n图 4 Mac配置1\n\n图 5 Mac配置2\n\n图 6 Mac配置3用户ID就是在服务端配置v2ray后生成的，不清楚配置的可以在服务端命令行通过命令v2ray info查看配置，接下来就可以愉快的上网了！","dateCreated":"2019-06-17T14:50:09+08:00","dateModified":"2019-06-26T16:16:36+08:00","datePublished":"2019-06-17T14:50:09+08:00","description":"这两天发现Google上不去了，想到之前也出现过类似的问题，于是登录到搬瓦工后台，从新设置了SS端口，以为这就完事了，打开浏览器还是无法加载页面，一脸的懵逼（改了也还不行？），于是本着不会就百度的想法，发现IP被墙了。","headline":"搬瓦工","image":["thumb-01.jpg","cover-01.jpg"],"mainEntityOfPage":{"@type":"WebPage","@id":"http://blog.yangshanlin.cn/2019/06/17/banwagong/"},"publisher":{"@type":"Organization","name":130,"sameAs":["https://github.com/yangshanlin","mailto:yangshanlinlin@gmail.com","/atom.xml"],"image":"ic_head.jpg","logo":{"@type":"ImageObject","url":"ic_head.jpg"}},"url":"http://blog.yangshanlin.cn/2019/06/17/banwagong/","keywords":"Other","thumbnailUrl":"thumb-01.jpg"}</script>
+    <meta name="description" content="这两天发现Google上不去了，想到之前也出现过类似的问题，于是登录到搬瓦工后台，从新设置了SS端口，以为这就完事了，打开浏览器还是无法加载页面，一脸的懵逼（改了也还不行？），于是本着不会就百度的想法，发现IP被墙了。">
+<meta name="keywords" content="Other">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="搬瓦工">
+<meta property="og:url" content="http://blog.yangshanlin.cn/2019/06/17/banwagong/index.html">
+<meta property="og:site_name" content="130&#39;s Blog">
+<meta property="og:description" content="这两天发现Google上不去了，想到之前也出现过类似的问题，于是登录到搬瓦工后台，从新设置了SS端口，以为这就完事了，打开浏览器还是无法加载页面，一脸的懵逼（改了也还不行？），于是本着不会就百度的想法，发现IP被墙了。">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:image" content="http://blog.yangshanlin.cn/2019/06/17/banwagong/ping-result.png">
+<meta property="og:image" content="http://blog.yangshanlin.cn/2019/06/17/banwagong/install-v2ray.png">
+<meta property="og:image" content="http://blog.yangshanlin.cn/2019/06/17/banwagong/edit-v2ray-config.png">
+<meta property="og:image" content="http://blog.yangshanlin.cn/2019/06/17/banwagong/edit-v2ray-config-result.png">
+<meta property="og:image" content="http://blog.yangshanlin.cn/2019/06/17/banwagong/mac-v2ray-config1.png">
+<meta property="og:image" content="http://blog.yangshanlin.cn/2019/06/17/banwagong/mac-v2ray-config2.png">
+<meta property="og:image" content="http://blog.yangshanlin.cn/2019/06/17/banwagong/mac-v2ray-config3.png">
+<meta property="og:updated_time" content="2019-06-26T08:16:36.228Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="搬瓦工">
+<meta name="twitter:description" content="这两天发现Google上不去了，想到之前也出现过类似的问题，于是登录到搬瓦工后台，从新设置了SS端口，以为这就完事了，打开浏览器还是无法加载页面，一脸的懵逼（改了也还不行？），于是本着不会就百度的想法，发现IP被墙了。">
+<meta name="twitter:image" content="http://blog.yangshanlin.cn/2019/06/17/banwagong/ping-result.png">
+    
+    
+    
+    
+    
+    <meta property="og:image" content="http://blog.yangshanlin.cn/assets/images/ic_head.jpg"/>
+    
+    
+    <meta property="og:image" content="http://blog.yangshanlin.cn/2019/06/17/banwagong/thumb-01.jpg"/>
+    <meta class="swiftype" name="image" data-type="enum"
+          content="http://blog.yangshanlin.cn/2019/06/17/banwagong/thumb-01.jpg"/>
+    
+    
+    <meta property="og:image" content="http://blog.yangshanlin.cn/2019/06/17/banwagong/cover-01.jpg"/>
+    <meta class="swiftype" name="image" data-type="enum"
+          content="http://blog.yangshanlin.cn/2019/06/17/banwagong/cover-01.jpg"/>
+    
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/style-ki7erumm0wy3pfglmllsmu9olfrwj8tjhl1al1rcnmpaiiotr40jqnrirsod.min.css">
+    <!--STYLES END-->
+    
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-123723014-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+
+    
+    
+    <script>(function (i, s, o, g, r, a, m) {
+            i["DaoVoiceObject"] = r;
+            i[r] = i[r] || function () {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date();
+            a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+            a.async = 1;
+            a.src = g;
+            a.charset = "utf-8";
+            m.parentNode.insertBefore(a, m)
+        })(window, document, "script", ('https:' == document.location.protocol ? 'https:' : 'http:') + "//widget.daovoice.io/widget/0ba5a2ce.js", "daovoice")
+        daovoice('init', {
+            app_id: "2fc1f5b3"
+        });
+        daovoice('update');
+    </script>
+    
+
+    <!--<script>-->
+        <!--(function(){-->
+            <!--if('{{ page.password }}'){-->
+                <!--if (prompt('请输入文章密码') !== '{{ page.password }}'){-->
+                    <!--alert('密码错误！');-->
+                    <!--history.back();-->
+                <!--}-->
+            <!--}-->
+        <!--})();-->
+    <!--</script>-->
+
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+        
+            
+        
+    
+
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a class="header-title-link" href="/ ">130&#39;s Blog</a>
+    </div>
+    
+        
+            <a  class="header-right-picture "
+                href="#about">
+        
+        
+            <img class="header-picture" src="/assets/images/ic_head.jpg" alt="作者的图片"/>
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+
+        
+    
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+            <div class="sidebar-profile">
+                <a href="/#about">
+                    <img class="sidebar-profile-picture" src="/assets/images/ic_head.jpg" alt="作者的图片"/>
+                </a>
+                <span class="sidebar-profile-name">130</span>
+                <span class="sidebar-profile-motto">Show me the code!</span>
+            </div>
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="/ "
+                            
+                            title="首页"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">首页</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="/all-categories"
+                            
+                            title="分类"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">分类</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="/all-tags"
+                            
+                            title="标签"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">标签</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="/all-archives"
+                            
+                            title="归档"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-archive" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">归档</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link open-algolia-search"
+                             href="#search"
+                            
+                            title="搜索"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-search" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">搜索</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="#about"
+                            
+                            title="关于"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-question" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">关于</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="https://github.com/yangshanlin" target="_blank" rel="noopener" title="GitHub">
+                    
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="mailto:yangshanlinlin@gmail.com" target="_blank" rel="noopener" title="邮箱">
+                    
+                        <i class="sidebar-button-icon far fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">邮箱</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="/atom.xml"
+                            
+                            title="RSS"
+                        >
+                    
+                        <i class="sidebar-button-icon fas fa-rss" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">RSS</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="http://yangshanlin.cn" target="_blank" rel="noopener" title="主站">
+                    
+                        <i class="sidebar-button-icon fas fa-compass" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">主站</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="http://opensource.yangshanlin.cn" target="_blank" rel="noopener" title="我的开源">
+                    
+                        <i class="sidebar-button-icon fas fa-balance-scale" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">我的开源</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="http://me.yangshanlin.cn" target="_blank" rel="noopener" title="我">
+                    
+                        <i class="sidebar-button-icon fas fa-user" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">我</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+        <div class="post-header-cover
+                    text-left
+                    "
+             style="background-image:url('/2019/06/17/banwagong/cover-01.jpg');"
+             data-behavior="4">
+            
+                <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            搬瓦工
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2019-06-17T14:50:09+08:00">
+	
+		    6月 17, 2019
+    	
+    </time>
+    
+</div>
+
+    
+</div>
+
+            
+        </div>
+
+
+            <div id="main" data-behavior="4"
+                 class="hasCover
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
+    
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <!-- excerpt --></p>
+<h1 id="始末"><a href="#始末" class="headerlink" title="始末"></a>始末</h1><p>这两天发现<code>Google</code>上不去了，想到之前也出现过类似的问题，于是登录到<code>搬瓦工</code>后台，从新设置了<code>SS</code>端口，以为这就完事了，打开浏览器还是无法加载页面，一脸的懵逼（改了也还不行？），于是本着不会就百度的想法，发现IP被墙了。<br><a id="more"></a><br>可以通过<a href="http://ping.pe/" target="_blank" rel="noopener">检测地址</a>来检查IP是否被墙，如果以<code>China</code>开头的显示为红色就代表你的IP已经被墙了，如图1所示：</p>
+<p><center><img src="/2019/06/17/banwagong/ping-result.png"></center></p>
+<p><center>图1 检测结果</center><br>如果遇到IP被墙那就不能再使用之前的方式直接使用IP来进行<code>fanqiang</code>了，搬瓦工提供了<a href="https://bwh88.net/ipchange.php" target="_blank" rel="noopener">一键换IP</a>的服务，按照操作支付相应的费用即可进行更换IP服务，但是这种方式的话还是有被墙的风险，在网上有搜索了一番发现<code>v2ray</code>这个软件，可以结合<code>cloudflare</code>来进行访问，并且墙不会检测到对应的IP地址。</p>
+<h1 id="配置v2ray-cloudflare"><a href="#配置v2ray-cloudflare" class="headerlink" title="配置v2ray + cloudflare"></a>配置v2ray + cloudflare</h1><h2 id="v2ray服务端配置"><a href="#v2ray服务端配置" class="headerlink" title="v2ray服务端配置"></a>v2ray服务端配置</h2><p>网上教程还是差不多的，本文不做详细说明，只说一下我遇到的一个问题就是由于IP被墙，本地命令行无法直接连接到远程服务，而搬瓦工的后台命令行比较奇葩操作起来很是不便，<code>Root shell - basic</code>只能够进行基本的查看命令，而不能进行交互式的响应，因为需要配置<code>v2ray</code>所以此命令行被pass掉，<code>Root shell - advanced</code>这个执行命令后很久都不会有响应结果，也被pass，最后还是选择了<code>Root shell - interactive</code>来进行安装，但是该命令行是不支持复制粘贴等操作，所有的命令需要手动输入。</p>
+<p>打开<code>Root shell - interactive</code>后会弹出一个命令行窗口，在里面执行命令就好了，由于该命令行不能显示其它颜色，所以配置的时候就是盲操作，特别需要注意的是，第一步需要选择<code>1.安装</code>，第二步需要选择<code>4.WebSocket + TLS</code>，其它操作可以结合网上的教程。</p>
+<p><center><img src="/2019/06/17/banwagong/install-v2ray.png"></center></p>
+<p><center>图 1 命令显示异常</center><br>我的传输协议选择是的：<code>WebSocket + TLS</code>，据说效果更好。按照网上的教程，到这里服务端就配置好了，但是我最后测试的时候发现依然打不开Google，还是在网上找解决办法时<a href="https://www.voicenews.cn/13374.html" target="_blank" rel="noopener">一篇教程</a>给了我启示，自己手动在<code>/etc/v2ray/config.json</code>文件中添加<code>&quot;listen&quot;: &quot;你的IP地址&quot;</code>，后完美解决。操作步骤如下：</p>
+<ul>
+<li>在<code>Root shell - basic</code>执行命令<code>vim /etc/v2ray/config.json</code>会弹出一个框，如图 2 所示</li>
+</ul>
+<p><center><img src="/2019/06/17/banwagong/edit-v2ray-config.png"></center></p>
+<p><center>图 2 编辑配置</center></p>
+<ul>
+<li>图 2 中点击<code>Open file</code>后会进入编辑模式，添加如图 3 所示的配置保存即可。</li>
+</ul>
+<p><center><img src="/2019/06/17/banwagong/edit-v2ray-config-result.png"></center></p>
+<p><center>图 3 编辑配置结果</center><br>完整配置文件如下：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">	<span class="attr">"log"</span>: &#123;</span><br><span class="line">		<span class="attr">"access"</span>: <span class="string">"/var/log/v2ray/access.log"</span>,</span><br><span class="line">		<span class="attr">"error"</span>: <span class="string">"/var/log/v2ray/error.log"</span>,</span><br><span class="line">		<span class="attr">"loglevel"</span>: <span class="string">"warning"</span></span><br><span class="line">	&#125;,</span><br><span class="line">	<span class="attr">"inbounds"</span>: [</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="attr">"port"</span>: <span class="number">10086</span>,</span><br><span class="line">			<span class="attr">"protocol"</span>: <span class="string">"vmess"</span>,</span><br><span class="line">			<span class="attr">"listen"</span>: <span class="string">"你的IP地址"</span>,</span><br><span class="line">			<span class="attr">"settings"</span>: &#123;</span><br><span class="line">				<span class="attr">"clients"</span>: [</span><br><span class="line">					&#123;</span><br><span class="line">						<span class="attr">"id"</span>: <span class="string">"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"</span>,</span><br><span class="line">						<span class="attr">"level"</span>: <span class="number">1</span>,</span><br><span class="line">						<span class="attr">"alterId"</span>: <span class="number">233</span></span><br><span class="line">					&#125;</span><br><span class="line">				]</span><br><span class="line">			&#125;,</span><br><span class="line">			<span class="attr">"streamSettings"</span>: &#123;</span><br><span class="line">				<span class="attr">"network"</span>: <span class="string">"ws"</span></span><br><span class="line">			&#125;,</span><br><span class="line">			<span class="attr">"sniffing"</span>: &#123;</span><br><span class="line">				<span class="attr">"enabled"</span>: <span class="literal">true</span>,</span><br><span class="line">				<span class="attr">"destOverride"</span>: [</span><br><span class="line">					<span class="string">"http"</span>,</span><br><span class="line">					<span class="string">"tls"</span></span><br><span class="line">				]</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		//include_ss</span><br><span class="line">		//include_socks</span><br><span class="line">		//include_mtproto</span><br><span class="line">		//include_in_config</span><br><span class="line">		//</span><br><span class="line">	],</span><br><span class="line">	<span class="attr">"outbounds"</span>: [</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="attr">"protocol"</span>: <span class="string">"freedom"</span>,</span><br><span class="line">			<span class="attr">"settings"</span>: &#123;&#125;</span><br><span class="line">		&#125;,</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="attr">"protocol"</span>: <span class="string">"blackhole"</span>,</span><br><span class="line">			<span class="attr">"settings"</span>: &#123;&#125;,</span><br><span class="line">			<span class="attr">"tag"</span>: <span class="string">"blocked"</span></span><br><span class="line">		&#125;,</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="attr">"protocol"</span>: <span class="string">"freedom"</span>,</span><br><span class="line">			<span class="attr">"settings"</span>: &#123;&#125;,</span><br><span class="line">			<span class="attr">"tag"</span>: <span class="string">"direct"</span></span><br><span class="line">		&#125;,</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="attr">"protocol"</span>: <span class="string">"mtproto"</span>,</span><br><span class="line">			<span class="attr">"settings"</span>: &#123;&#125;,</span><br><span class="line">			<span class="attr">"tag"</span>: <span class="string">"tg-out"</span></span><br><span class="line">		&#125;</span><br><span class="line">		//include_out_config</span><br><span class="line">		//</span><br><span class="line">	],</span><br><span class="line">	<span class="attr">"dns"</span>: &#123;</span><br><span class="line">		<span class="attr">"server"</span>: [</span><br><span class="line">			<span class="string">"1.1.1.1"</span>,</span><br><span class="line">			<span class="string">"1.0.0.1"</span>,</span><br><span class="line">			<span class="string">"8.8.8.8"</span>,</span><br><span class="line">			<span class="string">"8.8.4.4"</span>,</span><br><span class="line">			<span class="string">"localhost"</span></span><br><span class="line">		]</span><br><span class="line">	&#125;,</span><br><span class="line">	<span class="attr">"routing"</span>: &#123;</span><br><span class="line">		<span class="attr">"domainStrategy"</span>: <span class="string">"IPOnDemand"</span>,</span><br><span class="line">		<span class="attr">"rules"</span>: [</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="attr">"type"</span>: <span class="string">"field"</span>,</span><br><span class="line">				<span class="attr">"ip"</span>: [</span><br><span class="line">					<span class="string">"0.0.0.0/8"</span>,</span><br><span class="line">					<span class="string">"10.0.0.0/8"</span>,</span><br><span class="line">					<span class="string">"100.64.0.0/10"</span>,</span><br><span class="line">					<span class="string">"127.0.0.0/8"</span>,</span><br><span class="line">					<span class="string">"169.254.0.0/16"</span>,</span><br><span class="line">					<span class="string">"172.16.0.0/12"</span>,</span><br><span class="line">					<span class="string">"192.0.0.0/24"</span>,</span><br><span class="line">					<span class="string">"192.0.2.0/24"</span>,</span><br><span class="line">					<span class="string">"192.168.0.0/16"</span>,</span><br><span class="line">					<span class="string">"198.18.0.0/15"</span>,</span><br><span class="line">					<span class="string">"198.51.100.0/24"</span>,</span><br><span class="line">					<span class="string">"203.0.113.0/24"</span>,</span><br><span class="line">					<span class="string">"::1/128"</span>,</span><br><span class="line">					<span class="string">"fc00::/7"</span>,</span><br><span class="line">					<span class="string">"fe80::/10"</span></span><br><span class="line">				],</span><br><span class="line">				<span class="attr">"outboundTag"</span>: <span class="string">"blocked"</span></span><br><span class="line">			&#125;,</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="attr">"type"</span>: <span class="string">"field"</span>,</span><br><span class="line">				<span class="attr">"inboundTag"</span>: [<span class="string">"tg-in"</span>],</span><br><span class="line">				<span class="attr">"outboundTag"</span>: <span class="string">"tg-out"</span></span><br><span class="line">			&#125;</span><br><span class="line">			,</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="attr">"type"</span>: <span class="string">"field"</span>,</span><br><span class="line">				<span class="attr">"domain"</span>: [</span><br><span class="line">					<span class="string">"domain:epochtimes.com"</span>,</span><br><span class="line">					<span class="string">"domain:epochtimes.com.tw"</span>,</span><br><span class="line">					<span class="string">"domain:epochtimes.fr"</span>,</span><br><span class="line">					<span class="string">"domain:epochtimes.de"</span>,</span><br><span class="line">					<span class="string">"domain:epochtimes.jp"</span>,</span><br><span class="line">					<span class="string">"domain:epochtimes.ru"</span>,</span><br><span class="line">					<span class="string">"domain:epochtimes.co.il"</span>,</span><br><span class="line">					<span class="string">"domain:epochtimes.co.kr"</span>,</span><br><span class="line">					<span class="string">"domain:epochtimes-romania.com"</span>,</span><br><span class="line">					<span class="string">"domain:erabaru.net"</span>,</span><br><span class="line">					<span class="string">"domain:lagranepoca.com"</span>,</span><br><span class="line">					<span class="string">"domain:theepochtimes.com"</span>,</span><br><span class="line">					<span class="string">"domain:ntdtv.com"</span>,</span><br><span class="line">					<span class="string">"domain:ntd.tv"</span>,</span><br><span class="line">					<span class="string">"domain:ntdtv-dc.com"</span>,</span><br><span class="line">					<span class="string">"domain:ntdtv.com.tw"</span>,</span><br><span class="line">					<span class="string">"domain:minghui.org"</span>,</span><br><span class="line">					<span class="string">"domain:renminbao.com"</span>,</span><br><span class="line">					<span class="string">"domain:dafahao.com"</span>,</span><br><span class="line">					<span class="string">"domain:dongtaiwang.com"</span>,</span><br><span class="line">					<span class="string">"domain:falundafa.org"</span>,</span><br><span class="line">					<span class="string">"domain:wujieliulan.com"</span>,</span><br><span class="line">					<span class="string">"domain:ninecommentaries.com"</span>,</span><br><span class="line">					<span class="string">"domain:shenyun.com"</span></span><br><span class="line">				],</span><br><span class="line">				<span class="attr">"outboundTag"</span>: <span class="string">"blocked"</span></span><br><span class="line">			&#125;			,</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="attr">"type"</span>: <span class="string">"field"</span>,</span><br><span class="line">                    <span class="attr">"protocol"</span>: [</span><br><span class="line">                        <span class="string">"bittorrent"</span></span><br><span class="line">                    ],</span><br><span class="line">                    <span class="attr">"outboundTag"</span>: <span class="string">"blocked"</span></span><br><span class="line">                &#125;</span><br><span class="line">			//include_ban_ad</span><br><span class="line">			//include_rules</span><br><span class="line">			//</span><br><span class="line">		]</span><br><span class="line">	&#125;,</span><br><span class="line">	<span class="attr">"transport"</span>: &#123;</span><br><span class="line">		<span class="attr">"kcpSettings"</span>: &#123;</span><br><span class="line">            <span class="attr">"uplinkCapacity"</span>: <span class="number">100</span>,</span><br><span class="line">            <span class="attr">"downlinkCapacity"</span>: <span class="number">100</span>,</span><br><span class="line">            <span class="attr">"congestion"</span>: <span class="literal">true</span></span><br><span class="line">        &#125;,</span><br><span class="line">		<span class="attr">"sockopt"</span>: &#123;</span><br><span class="line">			<span class="attr">"tcpFastOpen"</span>: <span class="literal">true</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="v2ray-MAC端配置"><a href="#v2ray-MAC端配置" class="headerlink" title="v2ray MAC端配置"></a>v2ray MAC端配置</h2><p>配置如图 4，图 5，图 6所示：</p>
+<p><center><img src="/2019/06/17/banwagong/mac-v2ray-config1.png"></center></p>
+<p><center>图 4 Mac配置1</center></p>
+<p><center><img src="/2019/06/17/banwagong/mac-v2ray-config2.png"></center></p>
+<p><center>图 5 Mac配置2</center></p>
+<p><center><img src="/2019/06/17/banwagong/mac-v2ray-config3.png"></center></p>
+<p><center>图 6 Mac配置3</center><br>用户ID就是在服务端配置<code>v2ray</code>后生成的，不清楚配置的可以在服务端命令行通过命令<code>v2ray info</code>查看配置，接下来就可以愉快的上网了！</p>
+            
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+<div class="my_post_copyright">
+    <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+    <!-- JS库 sweetalert 可修改路径 -->
+    <script src="https://cdn.bootcss.com/jquery/2.0.0/jquery.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <p><span>本文标题:</span><a href="/2019/06/17/banwagong/">搬瓦工</a></p>
+    <p><span>文章作者:</span><a href="/" title="访问 130 的个人博客">130</a></p>
+    <p><span>发布时间:</span>2019年06月17日 - 14:06</p>
+    <p><span>最后更新:</span>2019年06月26日 - 16:06</p>
+    <p><span>原始链接:</span><a href="/2019/06/17/banwagong/" title="page.title">http://blog.yangshanlin.cn/2019/06/17/banwagong/</a>
+        <span class="copy-path"  title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="http://blog.yangshanlin.cn/2019/06/17/banwagong/"  aria-label="复制成功！"></i></span>
+    </p>
+    <p><span>许可协议:</span><i class="fab fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>
+</div>
+<script>
+    var clipboard = new Clipboard('.fa-clipboard');
+    $(".fa-clipboard").click(function(){
+        clipboard.on('success', function(){
+            swal({
+                title: "",
+                text: '复制成功',
+                icon: "success",
+                showConfirmButton: true
+            });
+        });
+    });
+</script>
+
+
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">标签</span><br/>
+                
+    <a class="tag tag--primary tag--small t-link" href="/tags/Other/">Other</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--disabled">
+                
+                    <i class="fa fa-angle-left" aria-hidden="true"></i>
+                    <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
+                </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2018/08/07/Config-Theme/" data-tooltip="主题美化" aria-label="下一篇: 主题美化">
+                
+                    <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
+                    <i class="fa fa-angle-right" aria-hidden="true"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a class="post-action-btn btn btn--default btn-open-shareoptions" href="#btn-open-shareoptions" aria-label="Diesen Beitrag teilen">
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.yangshanlin.cn/2019/06/17/banwagong/" title="分享到 Facebook">
+                    <i class="fab fa-facebook-square" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http://blog.yangshanlin.cn/2019/06/17/banwagong/" title="分享到 Twitter">
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http://blog.yangshanlin.cn/2019/06/17/banwagong/" title="分享到 Google+">
+                    <i class="fab fa-google-plus-g" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a class="post-action-btn btn btn--default" href="#disqus_thread">
+                        <i class="far fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+<!--赞赏按钮-->
+<div class ="post-donate">
+    <div id="donate-board" class="donate-bar center">
+        <a id="donate-author" class="btn-donate" title="打赏">打脸赞赏戳这里OwO</a>
+    <br>
+    </div>
+</div>
+
+        
+        
+            
+                <div id="disqus_thread">
+    <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <div id="footer-img"></div>
+    <span class="copyrights">
+        License - <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/deed.en">Attribution-NonCommercial-NoDerivatives 4.0 International</a>.
+    </span>
+    <br>
+    <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <div class="powered-by">
+        <i class="fa fa-user-md"></i>
+        <span id="busuanzi_container_site_uv">
+        Total <span id="busuanzi_value_site_uv"></span> visitors.
+        </span>
+
+        <!--<span id="busuanzi_container_site_pv">-->
+        <!--Total visits <span id="busuanzi_value_site_pv"></span> times.-->
+        <!--</span>-->
+
+        
+        <span id="timeDate">0</span><span id="times">0</span>
+        <script>
+            var now = new Date();
+            function createtime() {
+                var grt= new Date("06/06/2016 06:06:00");//此处修改你的建站时间或者网站上线时间
+                now.setTime(now.getTime()+250);
+                days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+                hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+                if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+                mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+                seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+                snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+                document.getElementById("timeDate").innerHTML = "Blog age: "+dnum+" day ";
+                document.getElementById("times").innerHTML = hnum + " h " + mnum + " m " + snum + " s";
+            }
+            setInterval("createtime()",250);
+        </script>
+    </div>
+
+    <span class="copyrights">
+        Copyrights &copy; 2019 130. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a class="post-action-btn btn btn--disabled">
+                
+                    <i class="fa fa-angle-left" aria-hidden="true"></i>
+                    <span class="hide-xs hide-sm text-small icon-ml">上一篇</span>
+                </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                    <a class="post-action-btn btn btn--default tooltip--top" href="/2018/08/07/Config-Theme/" data-tooltip="主题美化" aria-label="下一篇: 主题美化">
+                
+                    <span class="hide-xs hide-sm text-small icon-mr">下一篇</span>
+                    <i class="fa fa-angle-right" aria-hidden="true"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a class="post-action-btn btn btn--default btn-open-shareoptions" href="#btn-open-shareoptions" aria-label="Diesen Beitrag teilen">
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.yangshanlin.cn/2019/06/17/banwagong/" title="分享到 Facebook">
+                    <i class="fab fa-facebook-square" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http://blog.yangshanlin.cn/2019/06/17/banwagong/" title="分享到 Twitter">
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http://blog.yangshanlin.cn/2019/06/17/banwagong/" title="分享到 Google+">
+                    <i class="fab fa-google-plus-g" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+                <li class="post-action">
+                    <a class="post-action-btn btn btn--default" href="#disqus_thread">
+                        <i class="far fa-comment"></i>
+                    </a>
+                </li>
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Nach oben">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+<!--赞赏按钮-->
+<div class ="post-donate">
+    <div id="donate-board" class="donate-bar center">
+        <a id="donate-author" class="btn-donate" title="打赏">打脸赞赏戳这里OwO</a>
+    <br>
+    </div>
+</div>
+
+                </div>
+                <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+    <i id="btn-close-shareoptions" class="fa fa-close"></i>
+    <ul class="share-options">
+        
+            
+            
+            <li class="share-option">
+                <a class="share-option-btn" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.yangshanlin.cn/2019/06/17/banwagong/">
+                    <i class="fa fab fa-facebook-square" aria-hidden="true"></i><span>分享到 Facebook</span>
+                </a>
+            </li>
+        
+            
+            
+            <li class="share-option">
+                <a class="share-option-btn" target="new" href="https://twitter.com/intent/tweet?text=http://blog.yangshanlin.cn/2019/06/17/banwagong/">
+                    <i class="fa fab fa-twitter" aria-hidden="true"></i><span>分享到 Twitter</span>
+                </a>
+            </li>
+        
+            
+            
+            <li class="share-option">
+                <a class="share-option-btn" target="new" href="https://plus.google.com/share?url=http://blog.yangshanlin.cn/2019/06/17/banwagong/">
+                    <i class="fa fab fa-google-plus-g" aria-hidden="true"></i><span>分享到 Google+</span>
+                </a>
+            </li>
+        
+    </ul>
+</div>
+
+
+            
+        </div>
+        
+
+
+    
+        
+    
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fas fa-times">
+            </i>
+        </div>
+        
+            <img id="about-card-picture" src="/assets/images/ic_head.jpg" alt="作者的图片"/>
+        
+            <h4 id="about-card-name">130</h4>
+        
+            <div id="about-card-bio"><p>Show me the code!<br/><a href="https://me.yangshanlin.cn/">「 About Me 」</a></p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>Android Develper</p>
+
+            </div>
+        
+        
+            <div id="about-card-location">
+                <i class="fa fa-map-marker"></i>
+                <br/>
+                Shanghai, China
+            </div>
+        
+    </div>
+</div>
+
+        
+            <div id="algolia-search-modal" class="modal-container">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="close-button"><i class="fas fa-times"></i></span>
+            <a href="https://algolia.com" target="_blank" rel="noopener" class="searchby-algolia text-color-light link-unstyled">
+                <!--<span class="searchby-algolia-text text-color-light text-small">by</span>-->
+                <!--<img class="searchby-algolia-logo" src="https://www.algolia.com/static_assets/images/press/downloads/algolia-light.svg">-->
+                <img class="searchby-algolia-logo" src="/assets/images/search-by-algolia-light-background.svg">
+            </a>
+            <i class="search-icon fa fa-search"></i>
+            <form id="algolia-search-form">
+                <input type="text" id="algolia-search-input" name="search"
+                    class="form-control input--large search-input" placeholder="Search "
+                    />
+            </form>
+        </div>
+        <div class="modal-body">
+            <div class="no-result text-color-light text-center">没有找到文章</div>
+            <div class="results">
+                
+                <div class="media">
+                    
+                    <div class="media-left">
+                        <a class="link-unstyled" href="http://blog.yangshanlin.cn/2018/08/03/Quick-Start/">
+                            <!-- 此处直接使用post.thumbnailImageUrl 是相对路径，在根目录下可以生效，但是在文章详情页时无法生效-->
+                            <!--代表是在根路径：https://xx.com/index.html， post.thumbnailImageUrl是相对路径可以直接显示-->
+                            
+                                <img class="media-image" src="../../../../2018/08/03/Quick-Start//thumb-01.jpg" width="90" height="90"/>
+                            
+                        </a>
+                    </div>
+                    
+                    <div class="media-body">
+                        <a class="link-unstyled" href="http://blog.yangshanlin.cn/2018/08/03/Quick-Start/">
+                            <h3 class="media-heading">第一弹</h3>
+                        </a>
+                        <span class="media-meta">
+                            <span class="media-date text-small">
+                                
+                                    2018年8月3日
+                                
+                            </span>
+                        </span>
+                        <div class="media-content hide-xs font-merryweather"><h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>本来很早就打算打整一下<code>Github Pages</code>，一来没有发现自己中意的主题，二来也怪自己太懒，所以计划一直搁浅。<br></div>
+                    </div>
+                    <div style="clear:both;"></div>
+                    <hr>
+                </div>
+                
+                <div class="media">
+                    
+                    <div class="media-left">
+                        <a class="link-unstyled" href="http://blog.yangshanlin.cn/2018/08/07/Config-Theme/">
+                            <!-- 此处直接使用post.thumbnailImageUrl 是相对路径，在根目录下可以生效，但是在文章详情页时无法生效-->
+                            <!--代表是在根路径：https://xx.com/index.html， post.thumbnailImageUrl是相对路径可以直接显示-->
+                            
+                                <img class="media-image" src="../../../../2018/08/07/Config-Theme//thumb-01.jpg" width="90" height="90"/>
+                            
+                        </a>
+                    </div>
+                    
+                    <div class="media-body">
+                        <a class="link-unstyled" href="http://blog.yangshanlin.cn/2018/08/07/Config-Theme/">
+                            <h3 class="media-heading">主题美化</h3>
+                        </a>
+                        <span class="media-meta">
+                            <span class="media-date text-small">
+                                
+                                    2018年8月7日
+                                
+                            </span>
+                        </span>
+                        <div class="media-content hide-xs font-merryweather"><h1 id="主题配置"><a href="#主题配置" class="headerlink" title="主题配置"></a>主题配置</h1><p>上次主要是对主题的使用作下简答的说明，现在说的是主题的美化，注意此处讨论的主题为<a href="https://github.com/yangshanlin/hexo-theme-tranquilpeak" target="_blank" rel="noopener">Tranquilpeak</a>，如有不适请自行Google。<br></div>
+                    </div>
+                    <div style="clear:both;"></div>
+                    <hr>
+                </div>
+                
+                <div class="media">
+                    
+                    <div class="media-left">
+                        <a class="link-unstyled" href="http://blog.yangshanlin.cn/2019/06/17/banwagong/">
+                            <!-- 此处直接使用post.thumbnailImageUrl 是相对路径，在根目录下可以生效，但是在文章详情页时无法生效-->
+                            <!--代表是在根路径：https://xx.com/index.html， post.thumbnailImageUrl是相对路径可以直接显示-->
+                            
+                                <img class="media-image" src="../../../../2019/06/17/banwagong//thumb-01.jpg" width="90" height="90"/>
+                            
+                        </a>
+                    </div>
+                    
+                    <div class="media-body">
+                        <a class="link-unstyled" href="http://blog.yangshanlin.cn/2019/06/17/banwagong/">
+                            <h3 class="media-heading">搬瓦工</h3>
+                        </a>
+                        <span class="media-meta">
+                            <span class="media-date text-small">
+                                
+                                    2019年6月17日
+                                
+                            </span>
+                        </span>
+                        <div class="media-content hide-xs font-merryweather"><p>这两天发现<code>Google</code>上不去了，想到之前也出现过类似的问题，于是登录到<code>搬瓦工</code>后台，从新设置了<code>SS</code>端口，以为这就完事了，打开浏览器还是无法加载页面，一脸的懵逼（改了也还不行？），于是本着不会就百度的想法，发现IP被墙了。<br></div>
+                    </div>
+                    <div style="clear:both;"></div>
+                    <hr>
+                </div>
+                
+            </div>
+        </div>
+        <div class="modal-footer">
+            <p class="results-count text-medium"
+                data-message-zero="没有找到文章"
+                data-message-one="找到 1 篇文章"
+                data-message-other="找到 {n} 篇文章">
+                找到 3 篇文章
+            </p>
+        </div>
+    </div>
+</div>
+
+        
+        <!--赞赏弹出框-->
+<div id="donate">
+    <div id="donate-card">
+        <div class="donate-card-header">
+            <span class="donate-title">给作者投食OwO</span>
+            <div id="donate-btn-close">
+                <i class="fas fa-times">
+                </i>
+            </div>
+        </div>
+        <div class="donate-card-body">
+            <span class="donate-scan">扫一扫支付</span>
+            <img id="donate-card-picture" src="/assets/images/alipay.png"
+                 alt="作者的图片"/>
+        </div>
+        <div class="donate-card-footer">
+            <button href="#alipay_author" id="alipay-tab" aria-controls="alipay_author" role="tab" data-toggle="tab"
+                    class="pay-button alipay-button">
+                <!--<i class="fab fa-alipay" aria-hidden="true"></i>-->
+                <span>&nbsp;支付宝支付</span>
+            </button>
+            <button href="#wechatpay_author" id="wechatpay-tab" aria-controls="wechatpay_author" role="tab"
+                    data-toggle="tab" class="pay-button wechatpay-button">
+                <!--<i class="&#xe653;" aria-hidden="true"></i>-->
+                <span>&nbsp;微信支付</span>
+            </button>
+            <!--</div>-->
+            <!--<div id="donate-board" class="donate-bar center">-->
+            <!--<a id="donate-alipay" class="btn-donate " title="支付宝">支付宝支付</a>-->
+            <!--<br>-->
+            <!--</div>-->
+            <!--<div id="donate-board" class="donate-bar center">-->
+            <!--<a id="donate-wxpay" class="btn-donate" title="微信">微信支付</a>-->
+            <!--<br>-->
+            <!--</div>-->
+        </div>
+    </div>
+</div>
+
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+<script src="/assets/js/script-haugjhiopkkar2uhzth55vgoc6kjji2li8fcjmnblk96kczherkv5msfegka.min.js"></script>
+<!--SCRIPTS END-->
+
+    
+        <script>
+             var disqus_config = function () {
+                 this.page.url = 'http://blog.yangshanlin.cn/2019/06/17/banwagong/';
+                 
+                    this.page.identifier = '2019/06/17/banwagong/';
+                 
+             };
+            (function() {
+                var d = document, s = d.createElement('script');
+                var disqus_shortname = 'yangshanlin';
+                s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+                s.setAttribute('data-timestamp', +new Date());
+                (d.head || d.body).appendChild(s);
+            })();
+        </script>
+    
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment-with-locales.min.js"></script>
+    <script src="//cdn.jsdelivr.net/algoliasearch/3/algoliasearch.min.js"></script>
+    <script>
+        var algoliaClient = algoliasearch('UDHCD80O3A', '1d637a0ff47dbb1bb45aa75ba1f63667');
+        var algoliaIndex = algoliaClient.initIndex('yangshanlin');
+    </script>
+
+
+        <!--崩溃欺骗-->
+        <!--<script src="//src/crash_cheat.js"></script>-->
+    <script src="/live2dw/lib/L2Dwidget.min.js?0c58a1486de42ac6cc1c59c7d98ae887"></script><script>L2Dwidget.init({"model":{"jsonPath":"/live2dw/assets/koharu.model.json"},"display":{"position":"right","width":100,"height":200,"vOffset":-60},"mobile":{"show":true,"scale":0.5},"react":{"opacityDefault":0.9,"opacityOnHover":0.1},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
