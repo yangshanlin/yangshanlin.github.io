@@ -1,3 +1,3 @@
-# 130's Blog
+# 130 Blog
 
 Powered by Hexo & Tranquilpeak.
